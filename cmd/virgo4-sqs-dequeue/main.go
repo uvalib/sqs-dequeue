@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"log"
 	"os"
+	"time"
 )
 
 //
@@ -19,77 +17,68 @@ func main() {
 	// Get config params and use them to init service context. Any issues are fatal
 	cfg := LoadConfiguration()
 
-	sess, err := session.NewSession( )
+	// load our AWS_SQS helper object
+	aws, err := NewAwsSqs( AwsSqsConfig{ } )
 	if err != nil {
 		log.Fatal( err )
 	}
 
-	svc := sqs.New(sess)
-
-	// get the queue URL from the name
-	result, err := svc.GetQueueUrl( &sqs.GetQueueUrlInput{
-		QueueName: aws.String( cfg.InQueueName ),
-	})
-
+	// get the queue handle from the queue name
+	inQueueHandle, err := aws.QueueHandle( cfg.InQueueName )
 	if err != nil {
 		log.Fatal( err )
 	}
 
-	queueUrl := result.QueueUrl
-	count := 0
-
+	fileix := 0
     for {
 
-		log.Printf("Waiting for messages...")
+		//log.Printf("Waiting for messages...")
+		start := time.Now()
 
-		result, err := svc.ReceiveMessage( &sqs.ReceiveMessageInput{
-			//AttributeNames: []*string{
-			//	aws.String( sqs.QueueAttributeNameAll ),
-			//},
-			MessageAttributeNames: []*string{
-				aws.String(sqs.QueueAttributeNameAll ),
-			},
-			QueueUrl:            queueUrl,
-			MaxNumberOfMessages: aws.Int64(10),
-			WaitTimeSeconds:     aws.Int64( cfg.PollTimeOut ),
-		})
-
+		// wait for a batch of messages
+		messages, err := aws.BatchMessageGet( inQueueHandle, uint( MAX_SQS_BLOCK_COUNT), time.Duration( cfg.PollTimeOut ) * time.Second )
 		if err != nil {
 			log.Fatal( err )
 		}
 
-		// print and then delete
-		if len( result.Messages ) != 0 {
+		// did we receive any?
+		sz := len( messages )
+		if sz != 0 {
 
-			log.Printf( "Received %d messages", len( result.Messages ) )
+			//log.Printf( "Received %d messages", sz )
 
-			for _, m := range result.Messages {
+			for _, m := range messages {
 
 				// write to a file
-				err = writeMessage( fmt.Sprintf( "%s/message.%05d", cfg.OutDir, count ), *m.Body )
+				err = writeMessage( fmt.Sprintf( "%s/message.%05d", cfg.OutDir, fileix ), m.Payload )
 				if err != nil {
 					log.Fatal( err )
 				}
-
-				_, err := svc.DeleteMessage(&sqs.DeleteMessageInput{
-					QueueUrl:      queueUrl,
-					ReceiptHandle: m.ReceiptHandle,
-				})
-
-				if err != nil {
-					log.Fatal( err )
-				}
-
-				count += 1
+				fileix++
 			}
 
+			// delete them all
+			opStatus, err := aws.BatchMessageDelete( inQueueHandle, messages )
+			if err != nil {
+				log.Fatal( err )
+			}
+
+			// check the operation results
+			for ix, op := range opStatus {
+				if op == false {
+					log.Printf( "WARNING: message %d failed to delete", ix )
+				}
+			}
+
+			duration := time.Since(start)
+			log.Printf("Processed %d messages (%0.2f tps)", sz, float64( sz ) / duration.Seconds() )
 		} else {
 			log.Printf("No messages received...")
 		}
 	}
 }
 
-func writeMessage( filename string, contents string ) error {
+func writeMessage( filename string, contents Payload ) error {
 
 	file, err := os.Create( filename )
 
@@ -103,6 +92,10 @@ func writeMessage( filename string, contents string ) error {
 	if err != nil {
 		return( err )
 	}
-	log.Printf("Written %s", filename )
+	//log.Printf("Written %s", filename )
 	return nil
 }
+
+//
+// end of file
+//

@@ -30,3 +30,7 @@ func LoadConfiguration() *ServiceConfig {
 
 	return &cfg
 }
+
+//
+// end of file
+//
