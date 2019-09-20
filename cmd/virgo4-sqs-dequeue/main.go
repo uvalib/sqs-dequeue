@@ -31,7 +31,9 @@ func main() {
 		log.Fatal( err )
 	}
 
+	count := uint( 0 )
 	fileix := 0
+
     for {
 
 		//log.Printf("Waiting for messages...")
@@ -48,6 +50,7 @@ func main() {
 		if sz != 0 {
 
 			//log.Printf( "Received %d messages", sz )
+			count += uint( sz )
 
 			for _, m := range messages {
 
@@ -76,6 +79,11 @@ func main() {
 			log.Printf("Processed %d messages (%0.2f tps)", sz, float64( sz ) / duration.Seconds() )
 		} else {
 			log.Printf("No messages received...")
+		}
+
+		if cfg.MaxCount > 0 && count >= cfg.MaxCount  {
+			log.Printf("Terminating after %d messages", count )
+			break
 		}
 	}
 }
