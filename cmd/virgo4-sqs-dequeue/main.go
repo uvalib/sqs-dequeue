@@ -32,7 +32,7 @@ func main() {
 	}
 
 	count := uint( 0 )
-	fileix := 0
+	fileix := uint( 0 )
 
     for {
 
@@ -55,7 +55,7 @@ func main() {
 			for _, m := range messages {
 
 				// write to a file
-				err = writeMessage( fmt.Sprintf( "%s/message.%05d", cfg.OutDir, fileix ), m.Payload )
+				err = writeMessage( cfg, fileix, m )
 				if err != nil {
 					log.Fatal( err )
 				}
@@ -88,21 +88,37 @@ func main() {
 	}
 }
 
-func writeMessage( filename string, contents awssqs.Payload ) error {
+func writeMessage( config * ServiceConfig, index uint, message awssqs.Message ) error {
 
-	file, err := os.Create( filename )
+	payloadName := fmt.Sprintf( "%s/payload.%05d", config.OutDir, index )
+	attribsName := fmt.Sprintf( "%s/attribs.%05d", config.OutDir, index )
 
+	payloadFile, err := os.Create( payloadName )
 	if err != nil {
-		return( err )
+		return err
 	}
-	defer file.Close()
+	defer payloadFile.Close()
 
-	_, err = file.Write( []byte( contents ) )
-
+	attribsFile, err := os.Create( attribsName )
 	if err != nil {
-		return( err )
+		return err
 	}
-	//log.Printf("Written %s", filename )
+	defer attribsFile.Close()
+
+	// write the payload
+	_, err = payloadFile.Write( message.Payload )
+	if err != nil {
+		return err
+	}
+
+	// write the attributes
+	for _, a := range message.Attribs {
+		_, err = attribsFile.Write( []byte( fmt.Sprintf( "%s=%s\n", a.Name, a.Value ) ) )
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
