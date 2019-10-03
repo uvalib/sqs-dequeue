@@ -9,6 +9,9 @@ import (
 	"github.com/uvalib/virgo4-sqs-sdk/awssqs"
 )
 
+// TEMP
+var bucketName = "virgo4-ingest-staging-messages"
+
 //
 // main entry point
 //
@@ -20,7 +23,7 @@ func main() {
 	cfg := LoadConfiguration()
 
 	// load our AWS_SQS helper object
-	aws, err := awssqs.NewAwsSqs( awssqs.AwsSqsConfig{ } )
+	aws, err := awssqs.NewAwsSqs( awssqs.AwsSqsConfig{ MessageBucketName: bucketName } )
 	if err != nil {
 		log.Fatal( err )
 	}
@@ -89,6 +92,11 @@ func main() {
 }
 
 func writeMessage( config * ServiceConfig, index uint, message awssqs.Message ) error {
+
+	// if we do not have an output directory defined, dont save anything
+	if len( config.OutDir ) == 0 {
+		return nil
+	}
 
 	payloadName := fmt.Sprintf( "%s/payload.%05d", config.OutDir, index )
 	attribsName := fmt.Sprintf( "%s/attribs.%05d", config.OutDir, index )

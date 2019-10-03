@@ -29,7 +29,7 @@ func LoadConfiguration() *ServiceConfig {
 		log.Fatalf( "InQueueName cannot be blank" )
 	}
 	if len( cfg.OutDir ) == 0 {
-		log.Fatalf( "OutDir cannot be blank" )
+		log.Printf( "OutDir is blank, messages will not be saved" )
 	}
 
 	log.Printf("[CONFIG] InQueueName          = [%s]", cfg.InQueueName )
