@@ -9,9 +9,6 @@ import (
 	"github.com/uvalib/virgo4-sqs-sdk/awssqs"
 )
 
-// TEMP
-var bucketName = "virgo4-ingest-staging-messages"
-
 //
 // main entry point
 //
@@ -23,7 +20,7 @@ func main() {
 	cfg := LoadConfiguration()
 
 	// load our AWS_SQS helper object
-	aws, err := awssqs.NewAwsSqs(awssqs.AwsSqsConfig{MessageBucketName: bucketName})
+	aws, err := awssqs.NewAwsSqs(awssqs.AwsSqsConfig{MessageBucketName: cfg.MessageBucketName})
 	if err != nil {
 		log.Fatal(err)
 	}
