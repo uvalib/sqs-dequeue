@@ -7,10 +7,10 @@ import (
 
 // ServiceConfig defines all of the service configuration parameters
 type ServiceConfig struct {
-	InQueueName  string
-	OutDir       string
-	PollTimeOut  int64
-	MaxCount     uint
+	InQueueName string
+	OutDir      string
+	PollTimeOut int64
+	MaxCount    uint
 }
 
 // LoadConfiguration will load the service configuration from env/cmdline
@@ -25,17 +25,17 @@ func LoadConfiguration() *ServiceConfig {
 
 	flag.Parse()
 
-	if len( cfg.InQueueName ) == 0 {
-		log.Fatalf( "InQueueName cannot be blank" )
+	if len(cfg.InQueueName) == 0 {
+		log.Fatalf("InQueueName cannot be blank")
 	}
-	if len( cfg.OutDir ) == 0 {
-		log.Printf( "OutDir is blank, messages will not be saved" )
+	if len(cfg.OutDir) == 0 {
+		log.Printf("OutDir is blank, messages will not be saved")
 	}
 
-	log.Printf("[CONFIG] InQueueName          = [%s]", cfg.InQueueName )
-	log.Printf("[CONFIG] OutDir               = [%s]", cfg.OutDir )
-	log.Printf("[CONFIG] PollTimeOut          = [%d]", cfg.PollTimeOut )
-	log.Printf("[CONFIG] MaxCount             = [%d]", cfg.MaxCount )
+	log.Printf("[CONFIG] InQueueName          = [%s]", cfg.InQueueName)
+	log.Printf("[CONFIG] OutDir               = [%s]", cfg.OutDir)
+	log.Printf("[CONFIG] PollTimeOut          = [%d]", cfg.PollTimeOut)
+	log.Printf("[CONFIG] MaxCount             = [%d]", cfg.MaxCount)
 
 	return &cfg
 }
