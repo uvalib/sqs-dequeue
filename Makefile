@@ -6,7 +6,7 @@ GOGET = $(GOCMD) get
 GOMOD = $(GOCMD) mod
 GOFMT = $(GOCMD) fmt
 GOVET = $(GOCMD) vet
-PACKAGENAME = virgo4-sqs-dequeue
+PACKAGENAME = sqs-dequeue
 BINNAME = $(PACKAGENAME)
 
 build: darwin 

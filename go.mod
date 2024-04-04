@@ -1,4 +1,4 @@
-module github.com/uvalib/virgo4-sqs-dequeue
+module github.com/uvalib/sqs-dequeue
 
 go 1.13
 
